@@ -177,7 +177,7 @@ tr:hover {
     background-color: #e2e8f0;
 }
 
-/* === НОВОЕ: стили для модальных окон === */
+/* === СТИЛИ ДЛЯ МОДАЛОК (старые + новые) === */
 .modal {
     display: none; /* Скрыто по умолчанию */
     position: fixed;
@@ -240,9 +240,10 @@ tr:hover {
 .modal button:hover {
     background-color: var(--accent-blue);
 }
-/* === КОНЕЦ НОВОГО === */
+/* === КОНЕЦ СТИЛЕЙ ДЛЯ МОДАЛОК === */
 
-/* === НОВОЕ: стиль для drag-over === */
+
+/* === стиль для drag-over === */
 .drag-over {
     border: 2px dashed var(--primary-light-blue);
     background-color: rgba(30, 144, 255, 0.1);

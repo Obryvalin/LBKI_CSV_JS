@@ -11,16 +11,17 @@ class LBKI_CSV {
 
         this.setupEventListeners();
         this.setupDragAndDrop();
-        this.setupModals(); // <-- НОВОЕ: инициализация модалок
+        this.setupModals();
     }
 
     setupEventListeners() {
         document.getElementById('loadBtn').addEventListener('click', () => this.loadCSV());
         document.getElementById('resetBtn').addEventListener('click', () => this.resetToOriginal());
         document.getElementById('saveBtn').addEventListener('click', () => this.saveCSV());
-        document.getElementById('dedupeBtn').addEventListener('click', () => this.dedupe()); // Перемещено
-        document.getElementById('showColsBtnModal').addEventListener('click', () => this.openShowColsModal()); // <-- НОВОЕ
-        document.getElementById('pivotBtnModal').addEventListener('click', () => this.openPivotModal()); // <-- НОВОЕ
+        document.getElementById('dedupeBtn').addEventListener('click', () => this.dedupe());
+        document.getElementById('splitBtnModal').addEventListener('click', () => this.openSplitModal()); // <-- НОВОЕ
+        document.getElementById('showColsBtnModal').addEventListener('click', () => this.openShowColsModal());
+        document.getElementById('pivotBtnModal').addEventListener('click', () => this.openPivotModal());
         document.getElementById('addFilterBtn').addEventListener('click', () => this.addFilter());
 
         const tableContainer = document.getElementById('tableContainer');
@@ -31,6 +32,7 @@ class LBKI_CSV {
     setupModals() {
         this.showColsModal = document.getElementById('showColsModal');
         this.pivotModal = document.getElementById('pivotModal');
+        this.splitModal = document.getElementById('splitModal'); // <-- НОВОЕ
 
         // Кнопка "Применить" для столбцов
         document.getElementById('applyColsBtn').addEventListener('click', () => {
@@ -44,6 +46,13 @@ class LBKI_CSV {
             this.closeModal(this.pivotModal);
         });
 
+        // <-- НОВОЕ: Кнопка "Разделить и скачать" -->
+        document.getElementById('applySplitBtn').addEventListener('click', () => {
+            this.splitFile();
+            this.closeModal(this.splitModal);
+        });
+        // <-- КОНЕЦ НОВОГО -->
+
         // Кнопки закрытия (крестики)
         document.querySelectorAll('.modal .close').forEach(span => {
             span.addEventListener('click', (e) => {
@@ -55,6 +64,7 @@ class LBKI_CSV {
         window.addEventListener('click', (e) => {
             if (e.target === this.showColsModal) this.closeModal(this.showColsModal);
             if (e.target === this.pivotModal) this.closeModal(this.pivotModal);
+            if (e.target === this.splitModal) this.closeModal(this.splitModal); // <-- НОВОЕ
         });
     }
 
@@ -64,6 +74,10 @@ class LBKI_CSV {
 
     openPivotModal() {
         this.pivotModal.style.display = 'block';
+    }
+
+    openSplitModal() { // <-- НОВОЕ
+        this.splitModal.style.display = 'block';
     }
 
     closeModal(modal) {
@@ -162,7 +176,7 @@ class LBKI_CSV {
                     return false;
                 }
             }
-            return true; // Убрали глобальный фильтр
+            return true;
         });
 
         this.filteredData.unshift([...this.columnNames]);
@@ -307,7 +321,6 @@ class LBKI_CSV {
         this.renderTable();
     }
 
-    // --- НОВЫЙ МЕТОД: сводка из модалки ---
     pivotByColumnFromModal() {
         const colName = document.getElementById('pivotCol').value;
         const colIndex = this.columnNames.indexOf(colName);
@@ -327,9 +340,7 @@ class LBKI_CSV {
         this.displayStart = 0;
         this.renderTable();
     }
-    // --- КОНЕЦ НОВОГО МЕТОДА ---
 
-    // --- НОВЫЙ МЕТОД: столбцы из модалки ---
     showOnlyColumnsFromModal() {
         const input = document.getElementById('columnList').value;
         const desiredCols = input.split(',').map(c => c.trim()).filter(Boolean);
@@ -357,7 +368,6 @@ class LBKI_CSV {
         this.displayStart = 0;
         this.renderTable();
     }
-    // --- КОНЕЦ НОВОГО МЕТОДА ---
 
     saveCSV() {
         if (this.filteredData.length === 0) return alert("Нет данных для сохранения.");
@@ -371,6 +381,47 @@ class LBKI_CSV {
         a.click();
     }
 
+    // --- НОВЫЙ МЕТОД: разделение файла ---
+    splitFile() {
+        const rowCountInput = document.getElementById('splitRowCount').value;
+        const templateInput = document.getElementById('splitFileNameTemplate').value;
+
+        const rowCount = parseInt(rowCountInput);
+        if (isNaN(rowCount) || rowCount < 1) {
+            alert('Пожалуйста, введите корректное количество строк (> 0).');
+            return;
+        }
+
+        const template = templateInput || 'part_{{index}}'; // шаблон по умолчанию
+
+        // Получаем данные БЕЗ заголовка
+        const headerRow = this.rawData[0];
+        const dataRows = this.rawData.slice(1);
+
+        // Делим на части
+        const parts = [];
+        for (let i = 0; i < dataRows.length; i += rowCount) {
+            parts.push(dataRows.slice(i, i + rowCount));
+        }
+
+        // Создаём и скачиваем файлы
+        parts.forEach((part, index) => {
+            const fileName = template.replace('{{index}}', index + 1) + '.csv';
+            const csvText = [headerRow, ...part].map(row => row.join(this.currentSeparator)).join('\n');
+            const blob = new Blob([csvText], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url); // Очищаем память
+        });
+
+        alert(`Файл разделён на ${parts.length} частей.`);
+    }
+    // --- КОНЕЦ НОВОГО МЕТОДА ---
+
+    // --- ИСПРАВЛЕННЫЙ МЕТОД: drag and drop ---
     setupDragAndDrop() {
         const container = document.querySelector('.container');
 
@@ -399,13 +450,13 @@ class LBKI_CSV {
             container.classList.remove('drag-over');
         }
 
-       
-
+        // --- ИСПРАВЛЕНИЕ: handleDrop определена ДО использования ---
         const handleDrop = (e) => {
             const dt = e.dataTransfer;
             const files = dt.files;
             handleFiles(files);
         };
+
         container.addEventListener('drop', handleDrop, false);
 
         const handleFiles = (files) => {
@@ -422,6 +473,7 @@ class LBKI_CSV {
 
             this.loadCSV();
         };
+        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
     }
 }
 

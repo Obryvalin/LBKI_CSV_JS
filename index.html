@@ -18,8 +18,8 @@
                 <input type="file" id="csvFile" accept=".csv" />
                 <label for="separator">Разделитель:</label>
                 <select id="separator">
-                    <option value=";">Точка с запятой (;)</option>
                     <option value=",">Запятая (,)</option>
+                    <option value=";">Точка с запятой (;)</option>
                     <option value="\t">Табуляция (\t)</option>
                     <option value="|">Вертикальная черта (|)</option>
                 </select>
@@ -34,6 +34,7 @@
                     <button id="resetBtn">🔙 К исходному</button>
                     <button id="saveBtn">💾 Сохранить</button>
                     <button id="dedupeBtn">🗑️ Удалить дубли</button>
+                    <button id="splitBtnModal">✂️ Разделить файл</button> <!-- НОВОЕ -->
                     <button id="showColsBtnModal">📋 Столбцы</button>
                     <button id="pivotBtnModal">📊 Сводка</button>
                 </div>
@@ -91,6 +92,21 @@
                 <button id="applyPivotBtn">✅ Создать</button>
             </div>
         </div>
+
+        <!-- НОВОЕ: Модальное окно "Разделить файл" -->
+        <div id="splitModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>✂️ Разделить файл</h3>
+                <label>Количество строк в части:</label>
+                <input type="number" id="splitRowCount" placeholder="1000" min="1">
+                <label>Шаблон имени файла (без .csv):</label>
+                <input type="text" id="splitFileNameTemplate" placeholder="part_{{index}}">
+                <button id="applySplitBtn">✅ Разделить и скачать</button>
+            </div>
+        </div>
+        <!-- КОНЕЦ НОВОГО -->
+
     </div>
 
     <script src="script.js"></script>
