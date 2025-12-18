@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>LBKI_CSV</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LBKI_CSV</h1>
+            <p>Универсальный инструмент для работы с CSV-файлами</p>
+        </header>
+
+        <section class="controls">
+            <div class="control-group">
+                <input type="file" id="csvFile" accept=".csv" />
+                <label for="separator">Разделитель:</label>
+                <select id="separator">
+                    <option value=",">Запятая (,)</option>
+                    <option value=";">Точка с запятой (;)</option>
+                    <option value="\t">Табуляция (\t)</option>
+                    <option value="|">Вертикальная черта (|)</option>
+                </select>
+                <button id="loadBtn">Загрузить CSV</button>
+            </div>
+
+            <div class="control-group">
+                <button id="resetBtn">К исходному файлу</button>
+                <button id="saveBtn">Сохранить как CSV</button>
+            </div>
+        </section>
+
+        <section class="filters-section">
+            <h3>Фильтры</h3>
+            <div class="active-filters">
+                <!-- Здесь будут отображаться активные фильтры -->
+            </div>
+            <div class="add-filter-controls">
+                <select id="filterColumn">
+                    <!-- Заполняется динамически -->
+                </select>
+                <select id="filterType">
+                    <option value="string">Текст</option>
+                    <option value="number">Число</option>
+                    <option value="date">Дата</option>
+                </select>
+                <select id="filterOp">
+                    <option value="contains">содержит</option>
+                    <option value="equals">равно</option>
+                    <option value="gt">&gt;</option>
+                    <option value="lt">&lt;</option>
+                    <option value="gte">&ge;</option>
+                    <option value="lte">&le;</option>
+                </select>
+                <input type="text" id="filterValue" placeholder="значение...">
+                <button id="addFilterBtn">+</button>
+            </div>
+        </section>
+
+        <section class="actions">
+            <details>
+                <summary>Дополнительные действия</summary>
+                <div>
+                    <input type="text" id="globalFilter" placeholder="Глобальный поиск...">
+                    <button id="dedupeBtn">Удалить дубли</button>
+                </div>
+                <div>
+                    <label>Столбцы для отображения (через запятую):</label>
+                    <input type="text" id="columnList" placeholder="col1,col2,col3">
+                    <button id="showColsBtn">Применить</button>
+                </div>
+                <div>
+                    <label>Сводная таблица по столбцу:</label>
+                    <input type="text" id="pivotCol" placeholder="Название столбца">
+                    <button id="pivotBtn">Создать</button>
+                </div>
+            </details>
+        </section>
+
+        <section class="table-section">
+            <div id="tableContainer" class="table-container"></div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
