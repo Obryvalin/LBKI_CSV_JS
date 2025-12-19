@@ -1,4 +1,8 @@
 class LBKI_CSV {
+    /**
+     * Конструктор класса LBKI_CSV.
+     * Инициализирует переменные, настраивает обработчики событий, drag&drop и модальные окна.
+     */
     constructor() {
         this.rawData = [];         // исходные данные
         this.filteredData = [];    // после фильтрации/сортировки
@@ -9,17 +13,25 @@ class LBKI_CSV {
         this.filters = [];         // массив фильтров: [{ column, type, op, value }, ...]
         this.fileName = null;
 
+        this.loadingIndicator = document.getElementById('loadingIndicator');
+        this.dataInfoElement = document.getElementById('dataInfo');
+        this.snackbar = document.getElementById('snackbar');
+        this.headerSubtitle = document.getElementById('headerSubtitle');
+
         this.setupEventListeners();
         this.setupDragAndDrop();
         this.setupModals();
     }
 
+    /**
+     * Настраивает основные обработчики событий для кнопок и прокрутки таблицы.
+     */
     setupEventListeners() {
         document.getElementById('loadBtn').addEventListener('click', () => this.loadCSV());
         document.getElementById('resetBtn').addEventListener('click', () => this.resetToOriginal());
         document.getElementById('saveBtn').addEventListener('click', () => this.saveCSV());
         document.getElementById('dedupeBtn').addEventListener('click', () => this.dedupe());
-        document.getElementById('splitBtnModal').addEventListener('click', () => this.openSplitModal()); // <-- НОВОЕ
+        document.getElementById('splitBtnModal').addEventListener('click', () => this.openSplitModal());
         document.getElementById('showColsBtnModal').addEventListener('click', () => this.openShowColsModal());
         document.getElementById('pivotBtnModal').addEventListener('click', () => this.openPivotModal());
         document.getElementById('addFilterBtn').addEventListener('click', () => this.addFilter());
@@ -28,78 +40,137 @@ class LBKI_CSV {
         tableContainer.addEventListener('scroll', () => this.handleScroll(tableContainer));
     }
 
-    // --- НОВЫЕ МЕТОДЫ: работа с модалками ---
+    /**
+     * Настраивает модальные окна и их обработчики.
+     */
     setupModals() {
         this.showColsModal = document.getElementById('showColsModal');
         this.pivotModal = document.getElementById('pivotModal');
-        this.splitModal = document.getElementById('splitModal'); // <-- НОВОЕ
+        this.splitModal = document.getElementById('splitModal');
 
-        // Кнопка "Применить" для столбцов
+        this.columnListChipsContainer = document.getElementById('columnListChips');
+        this.pivotColChipsContainer = document.getElementById('pivotColChips');
+
         document.getElementById('applyColsBtn').addEventListener('click', () => {
             this.showOnlyColumnsFromModal();
             this.closeModal(this.showColsModal);
         });
 
-        // Кнопка "Создать" для сводки
         document.getElementById('applyPivotBtn').addEventListener('click', () => {
             this.pivotByColumnFromModal();
             this.closeModal(this.pivotModal);
         });
 
-        // <-- НОВОЕ: Кнопка "Разделить и скачать" -->
         document.getElementById('applySplitBtn').addEventListener('click', () => {
             this.splitFile();
             this.closeModal(this.splitModal);
         });
-        // <-- КОНЕЦ НОВОГО -->
 
-        // Кнопки закрытия (крестики)
         document.querySelectorAll('.modal .close').forEach(span => {
             span.addEventListener('click', (e) => {
                 e.target.closest('.modal').style.display = 'none';
             });
         });
 
-        // Закрытие по клику вне окна
         window.addEventListener('click', (e) => {
             if (e.target === this.showColsModal) this.closeModal(this.showColsModal);
             if (e.target === this.pivotModal) this.closeModal(this.pivotModal);
-            if (e.target === this.splitModal) this.closeModal(this.splitModal); // <-- НОВОЕ
+            if (e.target === this.splitModal) this.closeModal(this.splitModal);
         });
     }
 
+    /**
+     * Открывает модальное окно для выбора столбцов.
+     */
     openShowColsModal() {
         this.showColsModal.style.display = 'block';
     }
 
+    /**
+     * Открывает модальное окно для создания сводной таблицы.
+     */
     openPivotModal() {
         this.pivotModal.style.display = 'block';
     }
 
-    openSplitModal() { // <-- НОВОЕ
+    /**
+     * Открывает модальное окно для разделения файла.
+     */
+    openSplitModal() {
         this.splitModal.style.display = 'block';
     }
 
+    /**
+     * Закрывает указанное модальное окно.
+     * @param {HTMLElement} modal - Элемент модального окна.
+     */
     closeModal(modal) {
         modal.style.display = 'none';
     }
-    // --- КОНЕЦ НОВЫХ МЕТОДОВ ---
 
-    updatePageTitle() {
-        document.title = this.fileName ? `LBKI_CSV - ${this.fileName}` : 'LBKI_CSV';
+    /**
+     * Заполняет чипы для выбора столбцов в модальных окнах.
+     */
+    populateColumnSelects() {
+        this.columnListChipsContainer.innerHTML = '';
+        this.pivotColChipsContainer.innerHTML = '';
+
+        this.columnNames.forEach(col => {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.textContent = col;
+            chip.dataset.column = col;
+            chip.addEventListener('click', (e) => {
+                e.target.classList.toggle('selected');
+            });
+            this.columnListChipsContainer.appendChild(chip);
+        });
+
+        this.columnNames.forEach(col => {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.textContent = col;
+            chip.dataset.column = col;
+            chip.addEventListener('click', (e) => {
+                this.pivotColChipsContainer.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+                e.target.classList.add('selected');
+            });
+            this.pivotColChipsContainer.appendChild(chip);
+        });
     }
 
+    /**
+     * Обновляет заголовок страницы и подзаголовок в header.
+     */
+    updatePageTitle() {
+        document.title = this.fileName ? `LBKI_CSV - ${this.fileName}` : 'LBKI_CSV';
+        this.headerSubtitle.textContent = this.fileName ? this.fileName : 'Универсальный инструмент для работы с CSV-файлами';
+    }
+
+    /**
+     * Переключает видимость интерфейса до/после загрузки файла.
+     * @param {boolean} showPostLoad - Показать ли интерфейс после загрузки.
+     */
     toggleInterface(showPostLoad = true) {
         document.getElementById('preLoadSection').style.display = showPostLoad ? 'none' : 'flex';
         document.getElementById('postLoadSection').style.display = showPostLoad ? 'block' : 'none';
     }
 
+    /**
+     * Загружает и парсит CSV-файл.
+     */
     async loadCSV() {
+        this.loadingIndicator.style.display = 'flex';
+
         const fileInput = document.getElementById('csvFile');
         const separatorSelect = document.getElementById('separator');
         this.currentSeparator = separatorSelect.value;
 
-        if (!fileInput.files.length) return alert("Файл не выбран.");
+        if (!fileInput.files.length) {
+            this.loadingIndicator.style.display = 'none';
+            this.showSnackbar("Файл не выбран.");
+            return;
+        }
 
         const file = fileInput.files[0];
         this.fileName = file.name;
@@ -116,23 +187,72 @@ class LBKI_CSV {
 
         this.filters = [];
         this.updateActiveFiltersDisplay();
+        this.populateColumnSelects();
         this.toggleInterface(true);
         this.renderTable();
+        const rowsCount = this.filteredData.length > 0 ? this.filteredData.length - 1 : 0;
+        this.updateDataInfo();
+        this.showSnackbar(`Файл загружен. Столбцы: ${this.columnNames.length}, Строки: ${rowsCount}`);
+        this.loadingIndicator.style.display = 'none';
     }
 
+    /**
+     * Парсит CSV-текст, учитывая кавычки и экранирование.
+     * @param {string} text - Текст CSV-файла.
+     */
     parseCSV(text) {
         const sep = this.currentSeparator === '\\t' ? '\t' : this.currentSeparator;
-        const lines = text.split('\n').filter(line => line.trim() !== '');
-        this.rawData = lines.map(line => line.split(sep).map(field => field.trim()));
+        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+        const parsedLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const fields = [];
+            let currentField = '';
+            let inQuotes = false;
+            let j = 0;
+
+            while (j < line.length) {
+                const char = line[j];
+
+                if (char === '"') {
+                    if (inQuotes && j + 1 < line.length && line[j + 1] === '"') {
+                        currentField += '"';
+                        j += 2;
+                    } else {
+                        inQuotes = !inQuotes;
+                        j++;
+                    }
+                } else if (char === sep && !inQuotes) {
+                    fields.push(currentField);
+                    currentField = '';
+                    j++;
+                } else {
+                    currentField += char;
+                    j++;
+                }
+            }
+            fields.push(currentField);
+
+            parsedLines.push(fields);
+        }
+
+        this.rawData = parsedLines;
     }
 
+    /**
+     * Добавляет новый фильтр из UI.
+     */
     addFilter() {
         const col = document.getElementById('filterColumn').value;
         const type = document.getElementById('filterType').value;
         const op = document.getElementById('filterOp').value;
         const val = document.getElementById('filterValue').value.trim();
 
-        if (!col || !val) return alert("Выберите столбец и введите значение.");
+        if (!col || !val) {
+            this.showSnackbar("Выберите столбец и введите значение.");
+            return;
+        }
 
         this.filters.push({ column: col, type, op, value: val });
         this.updateActiveFiltersDisplay();
@@ -141,6 +261,9 @@ class LBKI_CSV {
         document.getElementById('filterValue').value = '';
     }
 
+    /**
+     * Обновляет отображение активных фильтров.
+     */
     updateActiveFiltersDisplay() {
         const container = document.querySelector('.active-filters');
         container.innerHTML = '';
@@ -163,6 +286,9 @@ class LBKI_CSV {
         });
     }
 
+    /**
+     * Применяет все активные фильтры к данным.
+     */
     applyFilters() {
         const dataWithoutHeader = this.rawData.slice(1);
         this.filteredData = dataWithoutHeader.filter(row => {
@@ -182,8 +308,15 @@ class LBKI_CSV {
         this.filteredData.unshift([...this.columnNames]);
         this.displayStart = 0;
         this.renderTable();
+        this.updateDataInfo();
     }
 
+    /**
+     * Проверяет значение ячейки по заданному фильтру.
+     * @param {string} value - Значение ячейки.
+     * @param {Object} filter - Объект фильтра { type, op, value }.
+     * @returns {boolean} - Соответствует ли значение фильтру.
+     */
     checkCellValue(value, filter) {
         const { type, op, value: val } = filter;
 
@@ -220,6 +353,10 @@ class LBKI_CSV {
         return false;
     }
 
+    /**
+     * Отрисовывает таблицу с текущими данными.
+     * @param {number} startIndex - Индекс строки, с которой начать отрисовку.
+     */
     renderTable(startIndex = 0) {
         const container = document.getElementById('tableContainer');
         container.innerHTML = '';
@@ -252,12 +389,19 @@ class LBKI_CSV {
         this.bindHeaderClick();
     }
 
+    /**
+     * Привязывает обработчики сортировки к заголовкам таблицы.
+     */
     bindHeaderClick() {
         document.querySelectorAll('th[data-index]').forEach(th => {
             th.onclick = () => this.sortByColumn(parseInt(th.dataset.index));
         });
     }
 
+    /**
+     * Обрабатывает событие прокрутки таблицы для динамической подгрузки.
+     * @param {HTMLElement} container - Контейнер таблицы.
+     */
     handleScroll(container) {
         if (container.scrollTop + container.clientHeight >= container.scrollHeight - 5) {
             this.displayStart += this.displayCount;
@@ -265,6 +409,9 @@ class LBKI_CSV {
         }
     }
 
+    /**
+     * Добавляет следующие строки в таблицу при прокрутке.
+     */
     appendRows() {
         const tbody = document.getElementById('tableBody');
         const adjustedStartIndex = this.displayStart === 0 ? 1 : this.displayStart;
@@ -281,7 +428,12 @@ class LBKI_CSV {
         }
     }
 
+    /**
+     * Сортирует данные по выбранному столбцу.
+     * @param {number} index - Индекс столбца для сортировки.
+     */
     sortByColumn(index) {
+        this.loadingIndicator.style.display = 'flex';
         const headerRow = this.filteredData[0];
         const dataRows = this.filteredData.slice(1);
         dataRows.sort((a, b) => a[index].localeCompare(b[index], undefined, { numeric: true }));
@@ -289,8 +441,13 @@ class LBKI_CSV {
         this.filteredData = [headerRow, ...dataRows];
         this.displayStart = 0;
         this.renderTable(this.displayStart);
+        this.updateDataInfo();
+        this.loadingIndicator.style.display = 'none';
     }
 
+    /**
+     * Возвращает данные к исходному файлу.
+     */
     resetToOriginal() {
         this.filters = [];
         this.updateActiveFiltersDisplay();
@@ -300,10 +457,16 @@ class LBKI_CSV {
         const colSelector = document.getElementById('filterColumn');
         colSelector.innerHTML = this.columnNames.map(col => `<option value="${col}">${col}</option>`).join('');
 
+        this.populateColumnSelects();
         this.displayStart = 0;
         this.renderTable();
+        this.updateDataInfo();
+        this.updatePageTitle();
     }
 
+    /**
+     * Удаляет дубликаты строк из данных.
+     */
     dedupe() {
         const headerRow = this.filteredData[0];
         const dataRows = this.filteredData.slice(1);
@@ -319,12 +482,27 @@ class LBKI_CSV {
         this.filteredData = [headerRow, ...uniqueDataRows];
         this.displayStart = 0;
         this.renderTable();
+        this.updateDataInfo();
+        const removedCount = this.rawData.length - this.filteredData.length;
+        this.showSnackbar(`Удалено дубликатов: ${removedCount - 1}`);
     }
 
+    /**
+     * Создаёт сводную таблицу по выбранному столбцу из модального окна.
+     */
     pivotByColumnFromModal() {
-        const colName = document.getElementById('pivotCol').value;
+        const selectedChip = this.pivotColChipsContainer.querySelector('.chip.selected');
+        if (!selectedChip) {
+             this.showSnackbar("Пожалуйста, выберите столбец для группировки.");
+             return;
+        }
+        const colName = selectedChip.dataset.column;
+
         const colIndex = this.columnNames.indexOf(colName);
-        if (colIndex === -1) return alert(`Столбец "${colName}" не найден.`);
+        if (colIndex === -1) {
+             this.showSnackbar(`Столбец "${colName}" не найден.`);
+             return;
+        }
 
         const headerRow = this.filteredData[0];
         const dataRows = this.filteredData.slice(1);
@@ -339,11 +517,19 @@ class LBKI_CSV {
         this.columnNames = ['value', 'count'];
         this.displayStart = 0;
         this.renderTable();
+        this.updateDataInfo();
     }
 
+    /**
+     * Отображает только выбранные столбцы из модального окна.
+     */
     showOnlyColumnsFromModal() {
-        const input = document.getElementById('columnList').value;
-        const desiredCols = input.split(',').map(c => c.trim()).filter(Boolean);
+        const selectedChips = this.columnListChipsContainer.querySelectorAll('.chip.selected');
+        if (selectedChips.length === 0) {
+            this.showSnackbar("Пожалуйста, выберите хотя бы один столбец.");
+            return;
+        }
+        const desiredCols = Array.from(selectedChips).map(chip => chip.dataset.column);
 
         const headerRow = this.filteredData[0];
         const newHeader = [];
@@ -358,7 +544,10 @@ class LBKI_CSV {
             }
         }
 
-        if (indices.length === 0) return alert("Ни один из указанных столбцов не найден.");
+        if (indices.length === 0) {
+             this.showSnackbar("Ни один из указанных столбцов не найден.");
+             return;
+        }
 
         this.columnNames = newHeader;
 
@@ -367,10 +556,17 @@ class LBKI_CSV {
 
         this.displayStart = 0;
         this.renderTable();
+        this.updateDataInfo();
     }
 
+    /**
+     * Сохраняет текущие данные в CSV-файл.
+     */
     saveCSV() {
-        if (this.filteredData.length === 0) return alert("Нет данных для сохранения.");
+        if (this.filteredData.length === 0) {
+            this.showSnackbar("Нет данных для сохранения.");
+            return;
+        }
         const sep = this.currentSeparator;
         const csvText = this.filteredData.map(row => row.join(sep)).join('\n');
         const blob = new Blob([csvText], { type: 'text/csv' });
@@ -381,30 +577,29 @@ class LBKI_CSV {
         a.click();
     }
 
-    // --- НОВЫЙ МЕТОД: разделение файла ---
+    /**
+     * Разделяет файл на части и скачивает их.
+     */
     splitFile() {
         const rowCountInput = document.getElementById('splitRowCount').value;
         const templateInput = document.getElementById('splitFileNameTemplate').value;
 
         const rowCount = parseInt(rowCountInput);
         if (isNaN(rowCount) || rowCount < 1) {
-            alert('Пожалуйста, введите корректное количество строк (> 0).');
+            this.showSnackbar('Пожалуйста, введите корректное количество строк (> 0).');
             return;
         }
 
-        const template = templateInput || 'part_{{index}}'; // шаблон по умолчанию
+        const template = templateInput || 'part_{{index}}';
 
-        // Получаем данные БЕЗ заголовка
         const headerRow = this.rawData[0];
         const dataRows = this.rawData.slice(1);
 
-        // Делим на части
         const parts = [];
         for (let i = 0; i < dataRows.length; i += rowCount) {
             parts.push(dataRows.slice(i, i + rowCount));
         }
 
-        // Создаём и скачиваем файлы
         parts.forEach((part, index) => {
             const fileName = template.replace('{{index}}', index + 1) + '.csv';
             const csvText = [headerRow, ...part].map(row => row.join(this.currentSeparator)).join('\n');
@@ -414,14 +609,15 @@ class LBKI_CSV {
             a.href = url;
             a.download = fileName;
             a.click();
-            URL.revokeObjectURL(url); // Очищаем память
+            URL.revokeObjectURL(url);
         });
 
-        alert(`Файл разделён на ${parts.length} частей.`);
+        this.showSnackbar(`Файл разделён на ${parts.length} частей.`);
     }
-    // --- КОНЕЦ НОВОГО МЕТОДА ---
 
-    // --- ИСПРАВЛЕННЫЙ МЕТОД: drag and drop ---
+    /**
+     * Настраивает drag&drop для загрузки файлов.
+     */
     setupDragAndDrop() {
         const container = document.querySelector('.container');
 
@@ -450,7 +646,6 @@ class LBKI_CSV {
             container.classList.remove('drag-over');
         }
 
-        // --- ИСПРАВЛЕНИЕ: handleDrop определена ДО использования ---
         const handleDrop = (e) => {
             const dt = e.dataTransfer;
             const files = dt.files;
@@ -464,7 +659,7 @@ class LBKI_CSV {
 
             const file = files[0];
             if (!file.name.toLowerCase().endsWith('.csv')) {
-                alert('Пожалуйста, перетащите файл с расширением .csv');
+                this.showSnackbar('Пожалуйста, перетащите файл с расширением .csv');
                 return;
             }
 
@@ -473,9 +668,34 @@ class LBKI_CSV {
 
             this.loadCSV();
         };
-        // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
+    }
+
+    /**
+     * Показывает snackbar с сообщением.
+     * @param {string} message - Сообщение для отображения.
+     * @param {number} duration - Время отображения в мс.
+     */
+    showSnackbar(message, duration = 3000) {
+        this.snackbar.textContent = message;
+        this.snackbar.classList.add('show');
+
+        setTimeout(() => {
+            this.snackbar.classList.remove('show');
+        }, duration);
+    }
+
+    /**
+     * Обновляет информацию о количестве столбцов и строк в UI.
+     */
+    updateDataInfo() {
+        if (this.columnNames.length === 0 || this.filteredData.length === 0) {
+            this.dataInfoElement.textContent = 'Столбцы: 0 | Строки: 0';
+            return;
+        }
+        const cols = this.columnNames.length;
+        const rows = this.filteredData.length > 0 ? this.filteredData.length - 1 : 0;
+        this.dataInfoElement.textContent = `Столбцы: ${cols} | Строки: ${rows}`;
     }
 }
 
-// Запуск
 document.addEventListener('DOMContentLoaded', () => new LBKI_CSV());
