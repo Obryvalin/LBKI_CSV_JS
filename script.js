@@ -34,7 +34,9 @@ class LBKI_CSV {
         document.getElementById('splitBtnModal').addEventListener('click', () => this.openSplitModal());
         document.getElementById('showColsBtnModal').addEventListener('click', () => this.openShowColsModal());
         document.getElementById('pivotBtnModal').addEventListener('click', () => this.openPivotModal());
+        document.getElementById('filtersBtnModal').addEventListener('click', () => this.openFiltersModal()); // <-- НОВОЕ
         document.getElementById('addFilterBtn').addEventListener('click', () => this.addFilter());
+        document.getElementById('csvFile').addEventListener('change', () => this.onFileSelected()); // <-- НОВОЕ
 
         const tableContainer = document.getElementById('tableContainer');
         tableContainer.addEventListener('scroll', () => this.handleScroll(tableContainer));
@@ -47,6 +49,7 @@ class LBKI_CSV {
         this.showColsModal = document.getElementById('showColsModal');
         this.pivotModal = document.getElementById('pivotModal');
         this.splitModal = document.getElementById('splitModal');
+        this.filtersModal = document.getElementById('filtersModal'); // <-- НОВОЕ
 
         this.columnListChipsContainer = document.getElementById('columnListChips');
         this.pivotColChipsContainer = document.getElementById('pivotColChips');
@@ -66,6 +69,8 @@ class LBKI_CSV {
             this.closeModal(this.splitModal);
         });
 
+    
+
         document.querySelectorAll('.modal .close').forEach(span => {
             span.addEventListener('click', (e) => {
                 e.target.closest('.modal').style.display = 'none';
@@ -76,6 +81,7 @@ class LBKI_CSV {
             if (e.target === this.showColsModal) this.closeModal(this.showColsModal);
             if (e.target === this.pivotModal) this.closeModal(this.pivotModal);
             if (e.target === this.splitModal) this.closeModal(this.splitModal);
+            if (e.target === this.filtersModal) this.closeModal(this.filtersModal); // <-- НОВОЕ
         });
     }
 
@@ -101,11 +107,25 @@ class LBKI_CSV {
     }
 
     /**
+     * Открывает модальное окно для фильтров.
+     */
+    openFiltersModal() {
+        this.filtersModal.style.display = 'block';
+    }
+
+    /**
      * Закрывает указанное модальное окно.
      * @param {HTMLElement} modal - Элемент модального окна.
      */
     closeModal(modal) {
         modal.style.display = 'none';
+    }
+
+    /**
+     * Обработчик события изменения файла.
+     */
+    onFileSelected() {
+        // Можно добавить логику, например, сброс кодировки при смене файла
     }
 
     /**
@@ -140,6 +160,14 @@ class LBKI_CSV {
     }
 
     /**
+     * Заполняет список столбцов в модальном окне фильтров.
+     */
+    populateFilterColumnSelect() {
+        const colSelector = document.getElementById('filterColumn');
+        colSelector.innerHTML = this.columnNames.map(col => `<option value="${col}">${col}</option>`).join('');
+    }
+
+    /**
      * Обновляет заголовок страницы и подзаголовок в header.
      */
     updatePageTitle() {
@@ -153,7 +181,8 @@ class LBKI_CSV {
      */
     toggleInterface(showPostLoad = true) {
         document.getElementById('preLoadSection').style.display = showPostLoad ? 'none' : 'flex';
-        document.getElementById('postLoadSection').style.display = showPostLoad ? 'block' : 'none';
+        document.getElementById('postLoadSection').style.display = showPostLoad ? 'flex' : 'none'; // <-- ИЗМЕНЕНО: block -> flex
+        document.querySelector('.app-header').style.display = showPostLoad ? 'flex' : 'none';
     }
 
     /**
@@ -176,7 +205,22 @@ class LBKI_CSV {
         this.fileName = file.name;
         this.updatePageTitle();
 
-        const text = await file.text();
+        const encoding = document.getElementById('encoding').value;
+
+        let text;
+        try {
+            if (encoding.toLowerCase() === 'utf-8') {
+                text = await file.text();
+            } else {
+                const buffer = await file.arrayBuffer();
+                const decoder = new TextDecoder(encoding);
+                text = decoder.decode(buffer);
+            }
+        } catch (e) {
+            this.showSnackbar(`Ошибка чтения файла в кодировке ${encoding}.`);
+            this.loadingIndicator.style.display = 'none';
+            return;
+        }
 
         this.parseCSV(text);
         this.columnNames = this.rawData[0] || [];
@@ -188,6 +232,7 @@ class LBKI_CSV {
         this.filters = [];
         this.updateActiveFiltersDisplay();
         this.populateColumnSelects();
+        this.populateFilterColumnSelect(); // <-- НОВОЕ
         this.toggleInterface(true);
         this.renderTable();
         const rowsCount = this.filteredData.length > 0 ? this.filteredData.length - 1 : 0;
@@ -458,6 +503,7 @@ class LBKI_CSV {
         colSelector.innerHTML = this.columnNames.map(col => `<option value="${col}">${col}</option>`).join('');
 
         this.populateColumnSelects();
+        this.populateFilterColumnSelect(); // <-- НОВОЕ
         this.displayStart = 0;
         this.renderTable();
         this.updateDataInfo();

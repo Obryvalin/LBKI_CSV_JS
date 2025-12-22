@@ -7,9 +7,21 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>LBKI_CSV</h1>
-            <p id="headerSubtitle">Универсальный инструмент для работы с CSV-файлами</p>
+        <!-- Шапка: кнопки слева, инфа справа -->
+        <header class="app-header" style="display: none;">
+            <div class="header-controls">
+                <button id="resetBtn">🔙 К исходному</button>
+                <button id="saveBtn">💾 Сохранить</button>
+                <button id="dedupeBtn">🗑️ Удалить дубли</button>
+                <button id="splitBtnModal">✂️ Разделить файл</button>
+                <button id="showColsBtnModal">📋 Столбцы</button>
+                <button id="pivotBtnModal">📊 Сводка</button>
+                <button id="filtersBtnModal">🔍 Фильтры</button>
+            </div>
+            <div class="header-info">
+                <span id="headerSubtitle">Универсальный инструмент для работы с CSV-файлами</span>
+                <span id="dataInfo">Столбцы: 0 | Строки: 0</span>
+            </div>
         </header>
 
         <!-- Блок до загрузки файла -->
@@ -23,24 +35,24 @@
                     <option value="\t">Табуляция (\t)</option>
                     <option value="|">Вертикальная черта (|)</option>
                 </select>
+                <label for="encoding">Кодировка:</label>
+                <select id="encoding">
+                    <option value="utf-8">UTF-8</option>
+                    <option value="windows-1251">Windows-1251</option>
+                </select>
                 <button id="loadBtn">📁 Открыть CSV</button>
             </div>
         </section>
 
         <!-- Блок после загрузки файла -->
         <section id="postLoadSection" class="post-load-section" style="display: none;">
-            <section class="controls">
-                <div class="control-group">
-                    <button id="resetBtn">🔙 К исходному</button>
-                    <button id="saveBtn">💾 Сохранить</button>
-                    <button id="dedupeBtn">🗑️ Удалить дубли</button>
-                    <button id="splitBtnModal">✂️ Разделить файл</button>
-                    <button id="showColsBtnModal">📋 Столбцы</button>
-                    <button id="pivotBtnModal">📊 Сводка</button>
-                </div>
-            </section>
+            <div id="tableContainer" class="table-container"></div>
+        </section>
 
-            <section class="filters-section">
+        <!-- Модальное окно "Фильтры" -->
+        <div id="filtersModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
                 <h3>🔍 Фильтры</h3>
                 <div class="active-filters">
                     <!-- Здесь будут отображаться активные фильтры -->
@@ -65,17 +77,9 @@
                     <input type="text" id="filterValue" placeholder="значение...">
                     <button id="addFilterBtn">➕</button>
                 </div>
-            </section>
-
-            <section class="table-section">
-                <!-- НОВОЕ: отображение количества -->
-                <div id="dataInfo" class="data-info">
-                    Столбцы: 0 | Строки: 0
-                </div>
-                <!-- КОНЕЦ НОВОГО -->
-                <div id="tableContainer" class="table-container"></div>
-            </section>
-        </section>
+                <button id="applyFiltersBtn" style="display: none;">✅ Применить фильтры</button>
+            </div>
+        </div>
 
         <!-- Модальное окно "Столбцы для отображения" -->
         <div id="showColsModal" class="modal">
@@ -99,7 +103,7 @@
             </div>
         </div>
 
-        <!-- НОВОЕ: Модальное окно "Разделить файл" -->
+        <!-- Модальное окно "Разделить файл" -->
         <div id="splitModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
@@ -111,22 +115,17 @@
                 <button id="applySplitBtn">✅ Разделить и скачать</button>
             </div>
         </div>
-        <!-- КОНЕЦ НОВОГО -->
 
     </div>
 
-    <!-- НОВОЕ: индикатор загрузки -->
     <div id="loadingIndicator" class="loading-indicator" style="display: none;">
         <div class="loading-line"></div>
         <div class="loading-line"></div>
         <div class="loading-line"></div>
     </div>
-    <!-- КОНЕЦ НОВОГО -->
 
-    <!-- НОВОЕ: snackbar -->
+    <!-- snackbar -->
     <div id="snackbar" class="snackbar">Сообщение</div>
-    <!-- КОНЕЦ НОВОГО -->
-
     <script src="script.js"></script>
 </body>
 </html>

@@ -22,62 +22,66 @@ body {
     background-color: var(--bg-light);
     color: var(--text-dark);
     line-height: 1.6;
-    padding: 20px;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
-    max-width: 1400px;
-    margin: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
     background: var(--card-bg);
-    padding: 24px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
 }
 
-header {
-    text-align: center;
-    margin-bottom: 24px;
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background-color: var(--primary-dark-blue);
+    color: white;
+    border-bottom: 1px solid var(--border);
 }
 
-header h1 {
-    color: var(--primary-dark-blue);
-    font-size: 2.2rem;
-}
-
-header p {
-    color: var(--text-light);
-}
-
-.control-group {
+.header-controls {
     display: flex;
     gap: 10px;
-    align-items: center;
     flex-wrap: wrap;
 }
 
-.pre-load-section {
+.header-info {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    font-size: 0.9rem;
 }
 
-.post-load-section {
-    /* Стили остаются */
+.header-info #headerSubtitle {
+    font-weight: 500;
+}
+
+.header-info #dataInfo {
+    font-size: 0.85rem;
+    opacity: 0.9;
 }
 
 button {
     background-color: var(--primary-light-blue);
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 8px 12px;
     border-radius: var(--radius);
     cursor: pointer;
     font-weight: 500;
     transition: background-color 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px; /* Расстояние между эмодзи и текстом */
+    gap: 6px;
+    font-size: 0.9rem;
 }
 
 button:hover {
@@ -91,19 +95,167 @@ input, select {
     font-size: 1rem;
 }
 
-.filters-section {
-    margin-bottom: 24px;
-    padding: 16px;
-    background-color: rgba(30, 144, 255, 0.05);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+/* Секция до загрузки */
+.pre-load-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    background-color: var(--bg-light);
 }
 
-.filters-section h3 {
-    margin-bottom: 12px;
+.post-load-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0;
+}
+
+.table-container {
+    flex: 1;
+    overflow-y: auto;
+    border: none;
+    margin: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    position: sticky;
+    top: 0;
+    background: var(--primary-dark-blue);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    z-index: 10;
+}
+
+th:hover {
+    background: var(--primary-light-blue);
+}
+
+tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+tr:hover {
+    background-color: #e2e8f0;
+}
+
+/* === СТИЛИ ДЛЯ МОДАЛОК === */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    margin: 5% auto;
+    padding: 20px;
+    border: none;
+    border-radius: var(--radius);
+    width: 80%;
+    max-width: 600px;
+    box-shadow: var(--shadow);
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.close:hover {
+    color: black;
+}
+
+.modal h3 {
+    margin-bottom: 15px;
     color: var(--primary-dark-blue);
 }
 
+.modal input, .modal select, .modal button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.modal button {
+    background-color: var(--primary-light-blue);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.modal button:hover {
+    background-color: var(--accent-blue);
+}
+
+/* === СТИЛИ ДЛЯ ЧИПОВ === */
+.chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+    min-height: 40px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: #f8fafc;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--primary-light-blue);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chip:hover {
+    background-color: var(--accent-blue);
+}
+
+.chip.selected {
+    background-color: #0A2A66;
+    box-shadow: 0 0 0 2px var(--primary-light-blue);
+}
+
+.chip.selected:hover {
+    background-color: #1E3A8A;
+}
+
+/* === СТИЛИ ДЛЯ АКТИВНЫХ ФИЛЬТРОВ === */
 .active-filters {
     margin-bottom: 16px;
 }
@@ -137,113 +289,31 @@ input, select {
     font-size: 1.2rem;
 }
 
-.table-container {
-    height: 60vh;
-    overflow-y: auto;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-top: 16px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-}
-
-th {
-    position: sticky;
-    top: 0;
-    background: var(--primary-dark-blue);
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-th:hover {
-    background: var(--primary-light-blue);
-}
-
-tr:nth-child(even) {
-    background-color: #f8fafc;
-}
-
-tr:hover {
-    background-color: #e2e8f0;
-}
-
-/* === СТИЛИ ДЛЯ МОДАЛОК === */
-.modal {
-    display: none; /* Скрыто по умолчанию */
+/* === СТИЛИ ДЛЯ SNACKBAR === */
+.snackbar {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 2px;
+    padding: 16px;
     position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5); /* Полупрозрачный фон */
+    z-index: 3000;
+    left: 50%;
+    bottom: 30px;
+    font-size: 17px;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
 }
 
-.modal-content {
-    background-color: var(--card-bg);
-    margin: 15% auto;
-    padding: 20px;
-    border: none;
-    border-radius: var(--radius);
-    width: 80%;
-    max-width: 500px;
-    box-shadow: var(--shadow);
-    position: relative;
+.snackbar.show {
+    visibility: visible;
+    opacity: 1;
 }
 
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    position: absolute;
-    top: 10px;
-    right: 15px;
-}
-
-.close:hover {
-    color: black;
-}
-
-.modal h3 {
-    margin-bottom: 15px;
-    color: var(--primary-dark-blue);
-}
-
-.modal input, .modal button {
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-.modal button {
-    background-color: var(--primary-light-blue);
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.modal button:hover {
-    background-color: var(--accent-blue);
-}
-/* === КОНЕЦ СТИЛЕЙ ДЛЯ МОДАЛОК === */
-
-
-/* === стиль для drag-over === */
+/* === СТИЛИ ДЛЯ DRAG OVER === */
 .drag-over {
     border: 2px dashed var(--primary-light-blue);
     background-color: rgba(30, 144, 255, 0.1);
@@ -251,7 +321,6 @@ tr:hover {
     transition: all 0.2s ease;
 }
 
-/* === СТИЛИ ДЛЯ ИНДИКАТОРА ЗАГРУЗКИ === */
 .loading-indicator {
     display: flex;
     justify-content: center;
@@ -288,88 +357,3 @@ tr:hover {
         opacity: 1;
     }
 }
-/* === КОНЕЦ СТИЛЕЙ ДЛЯ ИНДИКАТОРА ЗАГРУЗКИ === */
-
-/* === СТИЛИ ДЛЯ ОТОБРАЖЕНИЯ КОЛИЧЕСТВА === */
-.data-info {
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    background-color: #e2e8f0;
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-}
-/* === КОНЕЦ СТИЛЕЙ ДЛЯ ОТОБРАЖЕНИЯ КОЛИЧЕСТВА === */
-
-/* === СТИЛИ ДЛЯ SNACKBAR === */
-.snackbar {
-    visibility: hidden;
-    min-width: 250px;
-    margin-left: -125px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 2px;
-    padding: 16px;
-    position: fixed;
-    z-index: 3000;
-    left: 50%;
-    bottom: 30px;
-    font-size: 17px;
-    opacity: 0;
-    transition: opacity 0.3s, visibility 0.3s;
-}
-
-.snackbar.show {
-    visibility: visible;
-    opacity: 1;
-}
-/* === КОНЕЦ СТИЛЕЙ ДЛЯ SNACKBAR === */
-
-/* === СТИЛИ ДЛЯ ЧИПОВ (ВЫБОР СТОЛБЦОВ) === */
-.chips-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 15px;
-    min-height: 40px; /* Чтобы контейнер не схлопывался */
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background-color: #f8fafc;
-}
-
-.chip {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--primary-light-blue);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.chip:hover {
-    background-color: var(--accent-blue);
-}
-
-.chip.selected {
-    background-color: #0A2A66; /* Темно-синий */
-    box-shadow: 0 0 0 2px var(--primary-light-blue);
-}
-
-.chip.selected:hover {
-    background-color: #1E3A8A; /* Темнее при наведении */
-}
-
-.chip .remove {
-    margin-left: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 1rem;
-}
-/* === КОНЕЦ СТИЛЕЙ ДЛЯ ЧИПОВ === */
